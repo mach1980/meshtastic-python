@@ -487,9 +487,12 @@ def onConnected(interface):
         # handle settings
         if args.set:
             closeNow = True
-            waitForAckNak = True
-            node = interface.getNode(args.dest, False)
+            if args.force_set:
+                waitForAckNak = False
+            else:
+                waitForAckNak = True
 
+            node = interface.getNode(args.dest, False)
             # Handle the int/float/bool arguments
             pref = None
             for pref in args.set:
@@ -500,7 +503,8 @@ def onConnected(interface):
                     if config_type:
                         if len(config.ListFields()) == 0:
                             node.requestConfig(
-                                config.DESCRIPTOR.fields_by_name.get(field)
+                                config.DESCRIPTOR.fields_by_name.get(field),
+                                waitForAckNak
                             )
                         found = setPref(config, pref[0], pref[1])
                         if found:
@@ -1415,6 +1419,12 @@ def initParser():
     group.add_argument(
         "--no-time",
         help="Suppress sending the current time to the mesh",
+        action="store_true",
+    )
+
+    group.add_argument(
+        "--force-set",
+        help="Set a whole parameter group without waiting to read current settings or waiting for acknowledgment",
         action="store_true",
     )
 

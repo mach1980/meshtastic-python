@@ -114,23 +114,27 @@ class Node:
                 setattr(config_values, camel_to_snake(key), value)
             print(f"{str(camel_to_snake(field))}:\n{str(config_values)}")
 
-    def requestConfig(self, configType):
+    def requestConfig(self, configType, wantResponse=True):
         """Request the config from the node via admin message"""
         if self == self.iface.localNode:
             onResponse = None
         else:
-            onResponse = self.onResponseRequestSettings
-            print("Requesting current config from remote node (this can take a while).")
+            if (wantResponse):
+                onResponse = self.onResponseRequestSettings
+                print("Requesting current config from remote node (this can take a while).")
+            else:
+                print("Not waiting for response")
+                onResponse = None
 
         msgIndex = configType.index
         if configType.containing_type.full_name in ("meshtastic.LocalConfig", "LocalConfig"):
             p = admin_pb2.AdminMessage()
             p.get_config_request = msgIndex
-            self._sendAdmin(p, wantResponse=True, onResponse=onResponse)
+            self._sendAdmin(p, wantResponse=wantResponse, onResponse=onResponse)
         else:
             p = admin_pb2.AdminMessage()
             p.get_module_config_request = msgIndex
-            self._sendAdmin(p, wantResponse=True, onResponse=onResponse)
+            self._sendAdmin(p, wantResponse=wantResponse, onResponse=onResponse)
         if onResponse:
             self.iface.waitForAckNak()
 
